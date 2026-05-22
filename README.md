@@ -13,8 +13,7 @@
    - `sandbox_mode = "danger-full-access"`
    - `model_context_window = 512000`
    - `model_auto_compact_token_limit = 400000`
-   - 不会主动修改其他 section，例如 `plugins`、`projects`、`desktop` 等
-
+   
 2. 初始化或更新 `.env`
    - 优先读取 Windows `Internet Settings` 代理配置
    - 如果系统代理不可用，则回退到现有 `.env`
@@ -65,40 +64,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1
 
 表示 Codex 运行时使用完全访问权限模式。
 
-含义：
-
-- 不使用受限沙箱
-- 允许更高权限地访问本机文件和执行命令
-- 适合本地开发、自动化初始化和需要较强操作能力的场景
-
-注意：
-
-- 这个配置权限较高
-- 使用前请确认你了解它带来的访问范围和风险
-
 #### `model_context_window = 512000`
 
 表示模型可使用的上下文窗口大小。
 
-含义：
-
-- 控制单轮或连续对话中可容纳的上下文规模
-- 值越大，可保留的上下文通常越多
-- 适合长对话、大仓库分析、复杂任务持续推进的场景
-
-这里固定为你当前机器使用的值：`512000`。
-
 #### `model_auto_compact_token_limit = 400000`
 
 表示上下文接近上限时，自动触发压缩的阈值。
-
-含义：
-
-- 当上下文 token 使用量接近这个阈值时，Codex 会更早开始做上下文压缩
-- 有助于避免真正撞到窗口上限后再处理
-- 适合长线程下维持稳定的上下文管理行为
-
-这里固定为你当前机器使用的值：`400000`。
 
 ### `.env` 代理变量
 
@@ -112,48 +84,3 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1
   用于通用代理回退
 - `NO_PROXY`
   指定不走代理的地址，当前固定为 `localhost,127.0.0.1`
-
-## 代理解析规则
-
-脚本按以下优先级选择代理：
-
-1. Windows `Internet Settings`
-2. 现有 `.env`
-3. 默认值 `127.0.0.1:7890`
-
-支持的 `ProxyServer` 格式包括：
-
-```text
-127.0.0.1:7890
-```
-
-```text
-http=127.0.0.1:7890;https=127.0.0.1:7890
-```
-
-如果系统只配置了 `PAC` 脚本地址，而没有显式 `ProxyServer`，当前脚本不会解析 PAC，而是继续走回退逻辑。
-
-## 备份与重复执行
-
-脚本在写入前会自动备份原文件，命名格式如下：
-
-```text
-config.toml.bak.yyyyMMddHHmmss
-.env.bak.yyyyMMddHHmmss
-```
-
-只有在文件实际发生变更时才会生成备份。
-
-脚本支持重复执行。如果目标配置已经符合预期：
-
-- 不会重复插入相同配置项
-- 不会破坏原有 `TOML` section 结构
-- 不会重复生成备份
-- 输出摘要中的 `configChanged` 和 `envChanged` 会是 `false`
-
-## 注意事项
-
-- 当前仅支持 Windows
-- `sandbox_mode` 会被设置为 `danger-full-access`
-- 脚本不会修改 `WinHTTP` 代理设置
-- 脚本不会解析 PAC 地址
