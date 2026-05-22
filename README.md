@@ -67,23 +67,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1
 - 最终使用的代理地址
 - 代理来源
 
-## 参数说明
+## 参数含义
 
-### `-CodexHome`
+### 脚本运行参数
+
+#### `-CodexHome`
 
 指定要初始化的 Codex 配置目录。
 
-默认值：
-
-```text
-$env:CODEX_HOME
-```
-
-如果 `CODEX_HOME` 未设置，则回退为：
-
-```text
-$HOME\.codex
-```
+默认值：优先使用 `CODEX_HOME`，如果未设置则回退到 `$HOME\.codex`。
 
 示例：
 
@@ -91,30 +83,19 @@ $HOME\.codex
 scripts\init-codex.bat -CodexHome C:\Users\foo\.codex
 ```
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -CodexHome C:\Users\foo\.codex
-```
-
 适用场景：
 
-- 你想初始化另一个用户目录下的 Codex 配置
-- 你本机使用了自定义 `CODEX_HOME`
-- 你希望先在测试目录中验证脚本效果
+- 想初始化另一个用户目录下的 Codex 配置
+- 本机使用了自定义 `CODEX_HOME`
+- 希望先在测试目录中验证脚本效果
 
-### `-DefaultProxyHost`
+#### `-DefaultProxyHost`
 
 指定默认代理主机地址。
 
-只有在下面两种情况都失败时才会使用：
+只有当系统代理和现有 `.env` 都无法解析时才会生效。
 
-1. Windows `Internet Settings` 中没有可解析的代理配置
-2. 现有 `.env` 中没有可解析的代理配置
-
-默认值：
-
-```text
-127.0.0.1
-```
+默认值：`127.0.0.1`
 
 示例：
 
@@ -122,21 +103,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -Co
 scripts\init-codex.bat -DefaultProxyHost 192.168.1.10
 ```
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -DefaultProxyHost 192.168.1.10
-```
-
-### `-DefaultProxyPort`
+#### `-DefaultProxyPort`
 
 指定默认代理端口。
 
-同样只有在系统代理和现有 `.env` 都不可用时才会生效。
+只有当系统代理和现有 `.env` 都无法解析时才会生效。
 
-默认值：
-
-```text
-7890
-```
+默认值：`7890`
 
 示例：
 
@@ -144,43 +117,61 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -De
 scripts\init-codex.bat -DefaultProxyPort 7891
 ```
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -DefaultProxyPort 7891
-```
+### `config.toml` 配置项含义
 
-## 参数该如何修改
+脚本会写入下面 3 个配置项，它们的含义如下。
 
-最常见的修改方式有下面几种。
+#### `sandbox_mode = "danger-full-access"`
 
-### 1. 修改初始化目标目录
+表示 Codex 运行时使用完全访问权限模式。
 
-如果你不想让脚本操作当前用户的 `~/.codex`，可以显式传入 `-CodexHome`：
+含义：
 
-```bat
-scripts\init-codex.bat -CodexHome D:\custom\codex-home
-```
+- 不使用受限沙箱
+- 允许更高权限地访问本机文件和执行命令
+- 适合本地开发、自动化初始化和需要较强操作能力的场景
 
-### 2. 修改默认代理端口
+注意：
 
-如果你常用的本地代理端口不是 `7890`，例如是 `7891`，可以这样执行：
+- 这个配置权限较高
+- 使用前请确认你了解它带来的访问范围和风险
 
-```bat
-scripts\init-codex.bat -DefaultProxyPort 7891
-```
+#### `model_context_window = 512000`
 
-### 3. 同时修改默认代理主机和端口
+表示模型可使用的上下文窗口大小。
 
-如果你的代理服务不在本机回环地址，而是在局域网设备上，可以这样执行：
+含义：
 
-```bat
-scripts\init-codex.bat -DefaultProxyHost 192.168.31.10 -DefaultProxyPort 7890
-```
+- 控制单轮或连续对话中可容纳的上下文规模
+- 值越大，可保留的上下文通常越多
+- 适合长对话、大仓库分析、复杂任务持续推进的场景
 
-### 4. 用 PowerShell 方式传参
+这里固定为你当前机器使用的值：`512000`。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1 -CodexHome C:\Users\foo\.codex -DefaultProxyHost 127.0.0.1 -DefaultProxyPort 7890
-```
+#### `model_auto_compact_token_limit = 400000`
+
+表示上下文接近上限时，自动触发压缩的阈值。
+
+含义：
+
+- 当上下文 token 使用量接近这个阈值时，Codex 会更早开始做上下文压缩
+- 有助于避免真正撞到窗口上限后再处理
+- 适合长线程下维持稳定的上下文管理行为
+
+这里固定为你当前机器使用的值：`400000`。
+
+### `.env` 代理变量含义
+
+脚本会写入以下变量：
+
+- `HTTP_PROXY`
+  用于 HTTP 请求代理
+- `HTTPS_PROXY`
+  用于 HTTPS 请求代理
+- `ALL_PROXY`
+  用于通用代理回退
+- `NO_PROXY`
+  指定不走代理的地址，当前固定为 `localhost,127.0.0.1`
 
 ## 代理解析规则
 
@@ -202,7 +193,7 @@ http=127.0.0.1:7890;https=127.0.0.1:7890
 
 如果系统只配置了 `PAC` 脚本地址，而没有显式 `ProxyServer`，当前脚本不会解析 PAC，而是继续走回退逻辑。
 
-## 备份说明
+## 备份与重复执行
 
 脚本在写入前会自动备份原文件，命名格式如下：
 
@@ -213,11 +204,7 @@ config.toml.bak.yyyyMMddHHmmss
 
 只有在文件实际发生变更时才会生成备份。
 
-## 幂等性说明
-
-脚本支持重复执行。
-
-如果目标配置已经符合预期：
+脚本支持重复执行。如果目标配置已经符合预期：
 
 - 不会重复插入相同配置项
 - 不会破坏原有 `TOML` section 结构
@@ -228,32 +215,5 @@ config.toml.bak.yyyyMMddHHmmss
 
 - 当前仅支持 Windows
 - `sandbox_mode` 会被设置为 `danger-full-access`
-- 请确认你了解该配置带来的权限范围
 - 脚本不会修改 `WinHTTP` 代理设置
 - 脚本不会解析 PAC 地址
-
-## 示例
-
-### 使用当前用户默认目录初始化
-
-```bat
-scripts\init-codex.bat
-```
-
-### 初始化指定目录
-
-```bat
-scripts\init-codex.bat -CodexHome C:\Users\foo\.codex
-```
-
-### 当系统代理不可用时，使用自定义默认端口
-
-```bat
-scripts\init-codex.bat -DefaultProxyPort 7891
-```
-
-### 同时指定自定义目录和默认代理
-
-```bat
-scripts\init-codex.bat -CodexHome D:\codex-home -DefaultProxyHost 127.0.0.1 -DefaultProxyPort 7891
-```
