@@ -32,18 +32,6 @@
 - `scripts/init-codex.bat`
   批处理入口，方便双击执行或在 `cmd` 中直接调用，本质上会转调 PowerShell 脚本。
 
-## 默认行为
-
-如果不传任何参数，脚本会按下面的逻辑执行：
-
-- `CodexHome`
-  - 优先使用环境变量 `CODEX_HOME`
-  - 如果未设置，则回退到当前用户目录下的 `~/.codex`
-- `DefaultProxyHost`
-  - 默认值为 `127.0.0.1`
-- `DefaultProxyPort`
-  - 默认值为 `7890`
-
 ## 快速开始
 
 ### 方式一：使用 bat 入口
@@ -67,57 +55,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-codex.ps1
 - 最终使用的代理地址
 - 代理来源
 
-## 参数含义
+## 配置项含义
 
-### 脚本运行参数
-
-#### `-CodexHome`
-
-指定要初始化的 Codex 配置目录。
-
-默认值：优先使用 `CODEX_HOME`，如果未设置则回退到 `$HOME\.codex`。
-
-示例：
-
-```bat
-scripts\init-codex.bat -CodexHome C:\Users\foo\.codex
-```
-
-适用场景：
-
-- 想初始化另一个用户目录下的 Codex 配置
-- 本机使用了自定义 `CODEX_HOME`
-- 希望先在测试目录中验证脚本效果
-
-#### `-DefaultProxyHost`
-
-指定默认代理主机地址。
-
-只有当系统代理和现有 `.env` 都无法解析时才会生效。
-
-默认值：`127.0.0.1`
-
-示例：
-
-```bat
-scripts\init-codex.bat -DefaultProxyHost 192.168.1.10
-```
-
-#### `-DefaultProxyPort`
-
-指定默认代理端口。
-
-只有当系统代理和现有 `.env` 都无法解析时才会生效。
-
-默认值：`7890`
-
-示例：
-
-```bat
-scripts\init-codex.bat -DefaultProxyPort 7891
-```
-
-### `config.toml` 配置项含义
+### `config.toml` 配置项
 
 脚本会写入下面 3 个配置项，它们的含义如下。
 
@@ -160,7 +100,7 @@ scripts\init-codex.bat -DefaultProxyPort 7891
 
 这里固定为你当前机器使用的值：`400000`。
 
-### `.env` 代理变量含义
+### `.env` 代理变量
 
 脚本会写入以下变量：
 
@@ -179,7 +119,7 @@ scripts\init-codex.bat -DefaultProxyPort 7891
 
 1. Windows `Internet Settings`
 2. 现有 `.env`
-3. `-DefaultProxyHost` + `-DefaultProxyPort`
+3. 默认值 `127.0.0.1:7890`
 
 支持的 `ProxyServer` 格式包括：
 
